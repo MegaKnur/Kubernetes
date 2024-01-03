@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: training
+  name: updater-pod
+spec:
+  containers:
+    - name: nginx
+      image: nginx:alpine
+      ports:
+        - containerPort: 80
+      volumeMounts:
+        - name: storage
+          mountPath: /usr/share/nginx/html
+    - name: updater
+
+      #image: landrzejewski/updater:v1
+      #args:
+      #  - '10'
+
+      #image: landrzejewski/updater:v2
+      #env:
+      #  - name: INTERVAL
+      #    value: '10'
+
+      #image: landrzejewski/updater:v2
+      #env:
+      #  - name: INTERVAL
+      #    valueFrom:
+      #      configMapKeyRef:
+      #        name: updater-config-map
+      #        key: INTERVAL
+
+      image: landrzejewski/updater:v2
+      envFrom:
+        - configMapRef:
+            name: updater-config-map
+      volumeMounts:
+        - name: storage
+          mountPath: /var/htdocs
+        - name: config
+          mountPath: /config
+
+  volumes:
+    - name: storage
+      #emptyDir:
+      #  medium: Memory
+
+      #hostPath:
+      #  path: /temp/updater
+
+      #glusterfs:
+      #  endpoints: gfs-volume-service
+      #  path: gv0
+      #  readOnly: false
+
+      persistentVolumeClaim:
+        claimName: training-volume-claim
+
+    - name: config
+      configMap:
+        name: updater-config-map
